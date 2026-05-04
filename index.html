@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>M$M — Simulado de Licença de Seguros</title>
+<title>M$M — Simulado de Estudo para Licença de Seguros</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
@@ -432,7 +432,7 @@ function renderSplash() {
     <div class="splash">
       <div class="splash-icon">📋</div>
       <h1>Simulado de Seguros</h1>
-      <p>Prepare seus agentes para o exame de licença de Massachusetts. Escolha quantas questões deseja praticar.</p>
+      <p>Prepare-se para o exame de licença de Massachusetts. Escolha quantas questões deseja praticar.</p>
       <div class="splash-opts">
         ${[10,20,40,94].map(n=>`
           <div class="splash-card ${numQ===n?'active':''}" onclick="numQ=${n};document.querySelectorAll('.splash-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
