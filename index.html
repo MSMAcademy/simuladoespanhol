@@ -47,7 +47,7 @@
     font-size: 20px;
     letter-spacing: -0.5px;
   }
-  .topbar-brand span { color: #9FE1CB; }
+  .topbar-brand span { color: #D7B669; }
   .topbar-sub { font-size: 12px; opacity: 0.7; margin-top: 2px; }
   .topbar-score {
     background: rgba(255,255,255,0.15);
@@ -103,7 +103,7 @@
     border-color: var(--green) !important;
     font-weight: 500 !important;
   }
-  .btn-restart:hover { background: #9FE1CB !important; }
+  .btn-restart:hover { background: #D7B669 !important; }
 
   /* QUESTION CARD */
   .q-card {
@@ -217,7 +217,7 @@
     font-weight: 600;
     margin-bottom: 8px;
   }
-  .tag.ok { background: #EAF3DE; color: #3B6D11; }
+  .tag.ok { background: #F5EDD6; color: #7A5A10; }
   .tag.err { background: var(--red-light); color: var(--red-dark); }
   .review-q { font-weight: 500; color: var(--text); margin-bottom: 6px; line-height: 1.5; }
   .review-ans { color: var(--muted); font-size: 12px; }
@@ -272,7 +272,7 @@
 <div class="topbar">
   <div>
     <div class="topbar-brand">M<span>$</span>M <span style="font-family:'DM Sans';font-size:14px;opacity:0.7">MoneySource Management</span></div>
-    <div class="topbar-sub">Simulado de peparação para a Licença de Seguros — Massachusetts</div>
+    <div class="topbar-sub">Simulado de preparação para a Licença de Seguros — Massachusetts</div>
   </div>
   <div class="topbar-score" id="topScore" style="display:none">0 corretas</div>
 </div>
@@ -503,13 +503,13 @@ function renderResult() {
   const approved = pct >= 70;
   document.getElementById('app').innerHTML = `
     <div class="result-wrap">
-      <div class="result-hero" style="background:${approved?'#085041':'#791F1F'}">
+      <div class="result-hero" style="background:${approved?'#02160C':'#791F1F'};border:2px solid ${approved?'#BB902D':'#A32D2D'}">
         <div class="result-pct">${pct}%</div>
         <div class="result-msg">${approved?'✓ Aprovado!':'✗ Continue estudando'}</div>
         <div class="result-sub">${score} de ${questions.length} questões corretas · Mínimo para aprovação: 70%</div>
         <div class="result-actions">
-          <button class="btn-main" style="background:white;color:#085041" onclick="state='splash';render()">Novo simulado</button>
-          ${score<questions.length?`<button class="btn-main" style="background:rgba(255,255,255,0.2);color:white;border:1px solid rgba(255,255,255,0.4)" onclick="startQuiz(true)">Refazer ${questions.length-score} erradas</button>`:''}
+          <button class="btn-main" style="background:#BB902D;color:#02160C;border:none" onclick="state='splash';render()">Novo simulado</button>
+          ${score<questions.length?`<button class="btn-main" style="background:rgba(255,255,255,0.12);color:#D7B669;border:1px solid rgba(215,182,105,0.4)" onclick="startQuiz(true)">Refazer ${questions.length-score} erradas</button>`:''}
         </div>
       </div>
       <p style="font-size:14px;color:var(--muted);margin-bottom:14px;font-weight:500">Revisão completa:</p>
