@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>M$M — Simulado de Licença de Seguros</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green: #1D9E75;
+    --green-dark: #0F6E56;
+    --green-light: #E1F5EE;
+    --green-deep: #085041;
+    --red: #E24B4A;
+    --red-light: #FCEBEB;
+    --red-dark: #A32D2D;
+    --bg: #F7F6F2;
+    --surface: #FFFFFF;
+    --border: rgba(0,0,0,0.1);
+    --text: #1a1a1a;
+    --muted: #6b6b6b;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 0;
+  }
+
+  /* TOP BAR */
+  .topbar {
+    background: var(--green-deep);
+    color: white;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .topbar-brand {
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px;
+    letter-spacing: -0.5px;
+  }
+  .topbar-brand span { color: #9FE1CB; }
+  .topbar-sub { font-size: 12px; opacity: 0.7; margin-top: 2px; }
+  .topbar-score {
+    background: rgba(255,255,255,0.15);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  /* LAYOUT */
+  .container {
+    max-width: 700px;
+    margin: 0 auto;
+    padding: 24px 16px 60px;
+  }
+
+  /* PROGRESS */
+  .progress-wrap { margin-bottom: 20px; }
+  .progress-info { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .progress-bar { height: 5px; background: rgba(0,0,0,0.08); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; background: var(--green); border-radius: 3px; transition: width 0.4s ease; }
+
+  /* STATS ROW */
+  .stats { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; margin-bottom: 20px; }
+  .stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    text-align: center;
+  }
+  .stat-num { font-size: 22px; font-weight: 600; color: var(--text); line-height: 1; }
+  .stat-num.green { color: var(--green); }
+  .stat-num.red { color: var(--red); }
+  .stat-label { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+  /* TOOLBAR */
+  .toolbar { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; align-items: center; }
+  .toolbar select, .toolbar button {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    cursor: pointer;
+  }
+  .toolbar select:focus { outline: 2px solid var(--green); }
+  .btn-restart {
+    background: var(--green-light) !important;
+    color: var(--green-deep) !important;
+    border-color: var(--green) !important;
+    font-weight: 500 !important;
+  }
+  .btn-restart:hover { background: #9FE1CB !important; }
+
+  /* QUESTION CARD */
+  .q-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 16px;
+    animation: fadeIn 0.25s ease;
+  }
+  @keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+  .q-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 10px; }
+  .q-text {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px;
+    line-height: 1.55;
+    color: var(--text);
+    margin-bottom: 20px;
+  }
+
+  /* OPTIONS */
+  .options { display: flex; flex-direction: column; gap: 10px; }
+  .opt {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 13px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    line-height: 1.5;
+    transition: all 0.15s;
+    background: var(--bg);
+  }
+  .opt:hover { border-color: var(--green); background: var(--green-light); }
+  .opt.selected { border-color: var(--green); background: var(--green-light); color: var(--green-deep); }
+  .opt.correct { border-color: #3B6D11; background: #EAF3DE; color: #173404; }
+  .opt.wrong { border-color: var(--red-dark); background: var(--red-light); color: var(--red-dark); }
+  .opt-letter {
+    width: 26px; height: 26px; min-width: 26px;
+    border-radius: 50%;
+    border: 1.5px solid currentColor;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600;
+    opacity: 0.7;
+  }
+  .opt.correct .opt-letter, .opt.wrong .opt-letter { opacity: 1; }
+
+  /* FEEDBACK */
+  .feedback {
+    margin-top: 14px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1.5;
+  }
+  .feedback.ok { background: #EAF3DE; color: #3B6D11; border-left: 3px solid #3B6D11; }
+  .feedback.err { background: var(--red-light); color: var(--red-dark); border-left: 3px solid var(--red); }
+
+  /* NAV */
+  .nav { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .btn-main {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 600;
+    padding: 12px 24px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-primary { background: var(--green); color: white; }
+  .btn-primary:hover { background: var(--green-dark); }
+  .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+  .btn-outline {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+  }
+  .btn-outline:hover { background: var(--bg); }
+
+  /* RESULT */
+  .result-wrap { animation: fadeIn 0.3s ease; }
+  .result-hero {
+    background: var(--green-deep);
+    border-radius: var(--radius);
+    padding: 36px 24px;
+    text-align: center;
+    color: white;
+    margin-bottom: 20px;
+  }
+  .result-pct { font-family: 'DM Serif Display', serif; font-size: 72px; line-height: 1; }
+  .result-msg { font-size: 18px; margin-top: 8px; opacity: 0.9; }
+  .result-sub { font-size: 14px; margin-top: 6px; opacity: 0.6; }
+  .result-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 20px; }
+
+  .review-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    font-size: 13px;
+  }
+  .review-item .tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .tag.ok { background: #EAF3DE; color: #3B6D11; }
+  .tag.err { background: var(--red-light); color: var(--red-dark); }
+  .review-q { font-weight: 500; color: var(--text); margin-bottom: 6px; line-height: 1.5; }
+  .review-ans { color: var(--muted); font-size: 12px; }
+  .review-ans strong { color: var(--green-dark); }
+
+  /* SPLASH */
+  .splash {
+    min-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 16px;
+    animation: fadeIn 0.4s ease;
+  }
+  .splash-icon {
+    font-size: 48px;
+    margin-bottom: 20px;
+  }
+  .splash h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 32px;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+  .splash p { font-size: 15px; color: var(--muted); max-width: 400px; margin-bottom: 32px; line-height: 1.6; }
+  .splash-opts { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px; width: 100%; max-width: 400px; margin-bottom: 24px; }
+  .splash-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: left;
+  }
+  .splash-card:hover { border-color: var(--green); background: var(--green-light); }
+  .splash-card.active { border-color: var(--green); background: var(--green-light); }
+  .splash-card-num { font-size: 24px; font-weight: 600; color: var(--green); }
+  .splash-card-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+  @media (max-width: 480px) {
+    .stats { grid-template-columns: repeat(2,1fr); }
+    .splash-opts { grid-template-columns: repeat(2,1fr); }
+    .q-text { font-size: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div>
+    <div class="topbar-brand">M<span>$</span>M <span style="font-family:'DM Sans';font-size:14px;opacity:0.7">Moneysource Management</span></div>
+    <div class="topbar-sub">Simulado de Licença de Seguros — Massachusetts</div>
+  </div>
+  <div class="topbar-score" id="topScore" style="display:none">0 corretas</div>
+</div>
+
+<div class="container" id="app"></div>
+
+<script>
+const LETTERS = ['A','B','C','D'];
+
+const ALL_Q = [
+  {q:"O suplemento de beneficios que se adjunta a una póliza de seguro de vida que asegura a todos los miembros de una familia se llama:",opts:["Enmienda a término para el cónyuge","Enmienda a término para hijos","Enmienda a término para la familia","Enmienda a término para sobrevivientes"],ans:2},
+  {q:"¿Cuál de las siguientes es una característica del seguro de vida entera?",opts:["Un alto costo de la protección si la cobertura caducara después de un periodo de tiempo corto","Una reducción en los valores sin riesgo de pérdida después de los 65 años de edad","Una ausencia de las opciones de liquidación","Un requisito de que el costo de la cobertura se pague antes de los 65 años de edad"],ans:3},
+  {q:"La corporación garante de compañías de seguros de vida (LHGA) de Massachusetts se establecía para proteger a los consumidores en caso de:",opts:["Insolvencia","Deshumanilización","Fusión con otra compañía","Oferta de parte de la compañía"],ans:0},
+  {q:"En Massachusetts, las regulaciones para los contratos de seguros variables son establecidas por todos los siguientes, EXCEPTO:",opts:["La comisión de bolsa y valores","El departamento de seguros","Las autoridades de títulos del estado","La oficina del procurador general del Estado"],ans:3},
+  {q:"Un ejemplo de una designación de beneficiario por clase es:",opts:["Todos los hijos del asegurado","Un padre o madre específico del asegurado","Un accionista nombrado de una corporación","El patrimonio del asegurado"],ans:0},
+  {q:"¿Qué es cierto con respecto a un plan de jubilación aprobado?",opts:["Las contribuciones del empleador serán cedidas completamente del empleado en todo momento","Las contribuciones del empleado reducen los impuestos de seguro social","La participación de un propietario-empleado está prohibida","Las contribuciones hechas por el empleador son deducibles de los impuestos"],ans:3},
+  {q:"Todas las declaraciones siguientes sobre seguro de crédito colectivo son verdaderas EXCEPTO:",opts:["El monto total del seguro disponible para cualquiera de los individuos es ilimitado","El acreedor debe destinar los pagos del seguro al saldo del préstamo","El acreedor generalmente es dueño y beneficiario de la póliza","El propietario tiene derecho a la cancelación del seguro si el préstamo se paga por adelantado o refinancia"],ans:0},
+  {q:"Las anualidades inmediatas normalmente las compran las personas que:",opts:["Desean una deducción de impuestos para el año corriente","Quieren hacer contribuciones a una anualidad con amparo tributario","Tienen una suma global para invertir al jubilarse","Quieren acumular fondos para jubilarse más tarde"],ans:2},
+  {q:"Todos los siguientes son tipos de canjes de pólizas de seguro que se pueden realizar sin impuestos actuales, EXCEPTO:",opts:["El canje de una anualidad por una póliza de seguro de vida","El canje de una póliza de seguro de vida por una anualidad","El canje de una anualidad por otro contrato de anualidad","El canje de una póliza de seguro de vida por otra póliza de vida"],ans:0},
+  {q:"En comparación con una clasificación de riesgo preferido para una póliza de seguro de vida idéntica de la misma aseguradora, una clasificación de riesgo estándar tiene:",opts:["Más opciones de resolución","Menos opciones de dividendos","Primas más bajas","Primas más altas"],ans:3},
+  {q:"Los requisitos para suscribir una cobertura de seguro de vida por un monto con frecuencia incluyen todo lo siguiente, EXCEPTO:",opts:["Análisis de sangre","Examen de la vista","Examen médico","Muestra de orina"],ans:1},
+  {q:"Un contrato válido requiere:",opts:["Una oferta por escrito","Un formulario de la compañía","Una causa","Evidencia escrita"],ans:2},
+  {q:"La información sobre la clasificación crediticia de una persona está contenida en:",opts:["Un informe del agente","Un informe del consumidor","Un informe del médico tratante","Un informe del negociado de índices"],ans:1},
+  {q:"Las pólizas de seguro de vida tienen que tener todas las disposiciones siguientes, EXCEPTO:",opts:["Cláusula de renuncia de la prima","Cláusula de declaración falsa de la edad del asegurado","Cláusula de período de gracia","Cláusula de incontestabilidad"],ans:0},
+  {q:"Los pagos de beneficios bajo una anualidad mancomunada y de último sobreviviente normalmente continúan hasta el fallecimiento de:",opts:["Ambos pensionados","Un pensionado","Todos los beneficiarios","Un beneficiario"],ans:0},
+  {q:"¿Cuál de las siguientes es una ventaja del seguro de vida a término?",opts:["El costo es aproximadamente el mismo que el seguro de vida completo","Será rentable a largo plazo si se mantiene hasta la edad de 65 años o más","Ofrece una protección del seguro de manera permanente","La prima inicial es menor que para un monto equivalente del seguro de vida completo"],ans:3},
+  {q:"Al rescatar un contrato de seguro de vida por su valor en efectivo, el total de primas pagadas menos el total de los dividendos recibidos en efectivo o usados para compensar las primas es:",opts:["El valor en efectivo","El valor del préstamo","El pago bruto","El costo base"],ans:3},
+  {q:"¿Cuál de las siguientes causas de muerte probablemente sería EXCLUIDA de cobertura bajo una enmienda de muerte accidental?",opts:["Accidentes automovilísticos que ocurren por negligencia del asegurado","Accidentes de aviones comerciales en los cuales el asegurado era un pasajero con pasaje pagado","Heridas que el asegurado se autoinflinge intencionalmente","Muerte accidental causada por negligencia del beneficiario"],ans:2},
+  {q:"¿Qué anualidad proporcionaría beneficios durante cinco años al beneficiario si el beneficiario de la anualidad muriera después del inicio de los pagos?",opts:["Una anualidad contingente","Una anualidad vitalicia con un período incondicional de diez años","Una anualidad incondicional de cinco años","Una anualidad temporal de diez años"],ans:2},
+  {q:"¿Qué se ve afectado por la característica de índices de las pólizas de seguro de vida indexadas por el mercado bursátil?",opts:["El valor en efectivo","Los dividendos","La cantidad nominal","El reembolso de la prima"],ans:0},
+  {q:"Todas las siguientes son opciones de dividendos en las pólizas de seguro de vida, EXCEPTO:",opts:["Aplicar los dividendos para reducir la prima debida","Usar los dividendos para comprar un seguro de vida adicional liquidado","Acumular los dividendos con intereses","Recibir el valor en efectivo total de la póliza"],ans:3},
+  {q:"¿Cuál anualidad es apropiada para una persona de 50 años que quiere ayudar a pagar la educación universitaria de su nieto en quince años?",opts:["Una anualidad de sobreviviente","Una anualidad diferida","Una anualidad inmediata","Una anualidad vitalicia pura"],ans:1},
+  {q:"En un seguro de vida, ¿cuánto debe pagar la aseguradora si el asegurado muere durante el período de gracia sin haber pagado la prima?",opts:["El valor nominal de la póliza","El valor en efectivo de la póliza","El valor nominal de la póliza menos la prima adeudada","El monto reducido del seguro pagado provisto bajo la disposición sin riesgo de pérdida"],ans:2},
+  {q:"Todos los factores siguientes ayudan a determinar si se requerirán exámenes médicos para suscribir un seguro de vida, EXCEPTO:",opts:["Edad","Historial médico","Monto del seguro de vida","Tipo del seguro de vida"],ans:3},
+  {q:"¿En qué circunstancias tendrá derecho un beneficiario eventual a los pagos de un seguro de vida?",opts:["Todos los pagos se hacen al beneficiario primario","Después de que se hayan liquidado todas las deudas pendientes del asegurado","Si el beneficiario primario ha fallecido antes que el asegurado","Si el beneficiario eventual es un hijo del asegurado"],ans:2},
+  {q:"Si el beneficiario primario de una póliza de seguro de vida fallece antes que el asegurado, el beneficiario eventual:",opts:["Comparte los pagos de la póliza con el patrimonio del asegurado","Debe solicitar a la corte los pagos de la póliza","Debe tener un interés asegurable","Recibe los pagos de la póliza"],ans:3},
+  {q:"Pedir un préstamo sobre una póliza de seguro de vida:",opts:["Trae como resultado una distribución de ingresos gravables al dueño de la póliza","Trae como resultado la pérdida de la exención de impuestos de los pagos de los beneficios por muerte","Convierte el seguro en un contrato dotal modificado (MEC)","Reduce el monto de dinero que se puede recibir al rescatarse el contrato"],ans:3},
+  {q:"¿En cuál de las siguientes circunstancias se puede usar a un grupo como beneficiario de un seguro de vida?",opts:["Para nombrar a los hijos del asegurado como beneficiarios sin tener que nombrarlos individualmente","Para donar los beneficios del seguro a una organización benéfica en particular","Para establecer un fondo fiduciario para los hijos del asegurado","Para nombrar a una persona en particular como beneficiario para que reciba los beneficios de parte de un grupo"],ans:0},
+  {q:"Un productor debe ser nombrado por un asegurador:",opts:["Antes de obtener una licencia de seguro válida","En un formulario prescrito por el comisionado de seguros","Ser elegible para tomar un examen de licencia","O la licencia se terminará automáticamente en un plazo de 120 días"],ans:1},
+  {q:"Bajo la ley de la agencia, ¿a quién se considera el principal en la relación cuando una compañía de seguros designa a un agente?",opts:["Al dueño de la agencia","Al agente","A la compañía de seguros","A los clientes del agente"],ans:2},
+  {q:"Una póliza de seguro de vida entera de prima única podría definirse como una póliza que proporciona:",opts:["Protección por solo un número limitado de años","Un monto de seguro que disminuye a lo largo de su duración","Protección vitalicia porque es una póliza pagada por completo","Un beneficio de anualidad vitalicia además del seguro"],ans:2},
+  {q:"¿Qué es cierto con respecto a un seguro de vida ajustable?",opts:["La póliza mientras está vigente puede alternar entre las formas de un seguro de vida a término y un seguro de vida entera","La única opción sin riesgo de pérdida disponible es efectivo","No hay opciones de liquidación disponibles","Es una forma de anualidad que proporciona ingresos para la jubilación"],ans:0},
+  {q:"¿Cuál es la función principal de un agente al suscribir un seguro de vida?",opts:["Asegurar que la solicitud proporcione la información correcta a la aseguradora","Reconocer la cobertura inmediatamente sin aprobación de la oficina central","Emitir la póliza si toda la información de suscripción es correcta y completa","Obtener información de la Agencia de Información Médica"],ans:0},
+  {q:"La multa por violar una orden de cese y abstención puede incluir todo lo siguiente EXCEPTO:",opts:["Suspensión de la licencia","Revocación de la licencia","Una multa de $10.000","Completar un curso de leyes de seguro de Massachusetts"],ans:3},
+  {q:"La clasificación de riesgo preferente está disponible para solicitantes de seguro de vida que:",opts:["Paguen una prima fija aumentada","Fumen menos de una cajetilla de cigarrillos al día","Tienen una mejor expectativa de vida que el promedio","No tienen otra cobertura de seguro de vida"],ans:2},
+  {q:"El beneficio por muerte accidental proporcionado por una póliza de seguro de vida puede ser clasificado como:",opts:["Una cláusula adicional opcional a la póliza","Una exclusión de la póliza","Una forma de anualidad","Una opción de incaducidad"],ans:0},
+  {q:"¿Cuántas vidas normalmente asegura una póliza de seguro de vida de supervivencia?",opts:["Una","Dos","Tres","Cuatro"],ans:1},
+  {q:"Un plan 401(K) generalmente proporciona a los participantes:",opts:["Una opción de compra de acciones","Un beneficio de jubilación definido","Una opción de diferir el salario","Una póliza de seguro de crédito"],ans:2},
+  {q:"El comprador de una anualidad diferida normalmente pretende que los beneficios de ingresos comiencen:",opts:["Tras el fallecimiento del beneficiario","A petición del beneficiario designado","Dentro de varias semanas después de comprar la anualidad","En una fecha específica, a menudo varios años después de la emisión"],ans:3},
+  {q:"¿Cuál es el propósito de fechar una póliza de seguro de vida con efecto retroactivo?",opts:["Eliminar el período de inspección","Utilizar primas basadas en una edad anterior","Hacer que la cobertura entre en vigor antes de un problema médico reciente","Reducir el valor nominal de la póliza"],ans:1},
+  {q:"En la suscripción de un seguro de vida, ¿qué formulario podría pedir la opinión personal del agente sobre el carácter del solicitante?",opts:["Parte I de la solicitud","Parte II de la solicitud","Informe de inspección","Informe del agente"],ans:3},
+  {q:"¿Quién tiene la autoridad de cambiar al beneficiario de una anualidad individual?",opts:["El beneficiario","El titular","El fideicomisario","El pensionado"],ans:1},
+  {q:"El crecimiento de las inversiones de un plan de participación en las utilidades y de jubilación no es tributable como ingreso corriente. ¿Quién se beneficia con esta ventaja fiscal?",opts:["El empleador","El fideicomisario del plan","Los empleados que participan en el plan","El Servicio de Rentas Internas"],ans:2},
+  {q:"Según el requisito de 'distribución mínima', un plan de jubilación aprobado tiene que distribuir cierta cantidad cada año después de que el participante llegue a la edad de:",opts:["59-1/2","62","65","70-1/2"],ans:3},
+  {q:"Una cesión de aval de una póliza de seguro de vida a menudo se usa para:",opts:["Transferir todos los derechos de propiedad a un cesionario","Proporcionar una garantía para un préstamo","Cambiar las designaciones de beneficiarios revocables","Reducir los beneficios pagables al beneficiario"],ans:1},
+  {q:"¿Cuál contrato proporciona un beneficio de ingreso hasta que ocurre la primera muerte de entre dos o más beneficiarios?",opts:["Una anualidad conjunta y sobreviviente","Una anualidad temporal","Una anualidad vitalicia conjunta","Una anualidad vitalicia de un solo beneficiario"],ans:2},
+  {q:"Una transacción en la que un contrato de anualidad existente es finalizado y uno nuevo es emitido se le conoce como:",opts:["Conversión","Continuación","Reemplazo","Reinstalación"],ans:2},
+  {q:"Una razón para nombrar un fideicomiso en vez de a un individuo como beneficiario de una póliza de seguro de vida es para:",opts:["Proveer a los herederos un pago en suma global","Proporcionar una administración de los beneficios","Evitar los impuestos federales sobre los beneficios","Evitar una validación del testamento"],ans:1},
+  {q:"¿Cuánto impuesto se retiene de los fondos que se transfieren directamente de una cuenta IRA a otra cuenta IRA?",opts:["10%","15%","50%","Nada"],ans:3},
+  {q:"Bajo las leyes federales, un agente de seguros puede ser sentenciado a prisión por:",opts:["Vender seguros con una licencia de no residente","Malversar dinero de una compañía de seguros","Inducir a un cliente a firmar una solicitud de seguro","Demandar a una aseguradora debido a violaciones contractuales"],ans:1},
+  {q:"El término 'agente de acuerdos de seguro de vida' puede referirse a:",opts:["Un contador público certificado","Un proveedor de acuerdos de seguro de vida con licencia","Alguien que tiene licencia para negociar un contrato de acuerdo de seguro de vida","Un abogado habilitado licenciado"],ans:3},
+  {q:"¿Cuál beneficio no está disponible en una anualidad fija típica, pero se puede obtener en una anualidad indexada?",opts:["Una tasa de rendimiento mínima garantizada","Una variedad de opciones de pago de la anualidad","La seguridad del capital","Una protección a largo plazo contra la inflación"],ans:3},
+  {q:"En una póliza de vida entera que permite elegir opciones de dividendos, ¿qué debe incluirse?",opts:["Los dividendos se acumulan a una tasa garantizada","Los dividendos se difieren por un año","Los dividendos no están garantizados","Los dividendos están garantizados después del primer año"],ans:0},
+  {q:"¿Qué es cierto al fallecer un pensionado bajo una anualidad de vida conjunta?",opts:["El pensionado sobreviviente continuaría recibiendo los mismos beneficios","Los beneficios del pensionado sobreviviente cesarían completamente","Un beneficiario designado comenzaría a recibir pagos de beneficios de por vida","Los beneficios del pensionado sobreviviente se reducirían por la mitad"],ans:0},
+  {q:"Durante el período impugnable, una compañía de seguros puede rescindir una póliza de seguro de vida por todos los motivos siguientes, EXCEPTO:",opts:["Declaración falsa de la edad en la solicitud","Declaración falsa esencial en la solicitud","Fraude en la compra de la póliza","Encubrimiento esencial al comprar la póliza"],ans:2},
+  {q:"Uno de los propósitos de un plan aprobado de participación en las utilidades es:",opts:["Motivar a la administración a lograr un margen de ganancias del 25%","Distribuir una parte de las ganancias de la compañía a los empleados","Liquidar los activos de una corporación","Recompensar a los accionistas de una corporación"],ans:1},
+  {q:"Todos los factores siguientes normalmente afectan las tarifas de las primas de los seguros de vida, EXCEPTO:",opts:["Mortalidad","Gastos","Interés","Beneficiarios"],ans:3},
+  {q:"Las compañías de seguro deben mantener un nivel mínimo de activos calificados para demostrar:",opts:["Primas adquiridas","Beneficios de suscripción","Ingresos por inversiones","Solvencia"],ans:3},
+  {q:"Si el dueño de una póliza de seguro de vida NO ha seleccionado una opción de liquidación antes de la muerte del asegurado, ¿cuál declaración es cierta?",opts:["El beneficiario tiene derecho de seleccionar una opción después de la muerte del asegurado","La aseguradora selecciona la opción más beneficiosa para el beneficiario","Los pagos se harán de acuerdo con la cláusula de derecho a pago","No se puede seleccionar opciones después de la muerte del asegurado"],ans:0},
+  {q:"En 1990, una persona pagó $20.000 para comprar una anualidad diferida de prima única no aprobada. Cuando el valor en efectivo aumentó a $35.000, el dueño hizo un retiro de $10.000. La cantidad retirada:",opts:["Queda completamente sujeta a impuestos como ingreso ordinario","Queda parcialmente sujeta a impuestos como ingreso ordinario","Queda completamente sujeta a impuestos como ganancias de capital","Es una recuperación libre de impuestos de una inversión"],ans:0},
+  {q:"Una solicitud de seguro de vida debe contener todo lo siguiente, EXCEPTO:",opts:["El nombre y la dirección del solicitante","La firma del solicitante","La fecha de la solicitud","La fecha de vencimiento"],ans:3},
+  {q:"¿Qué tabla muestra la tasa de fallecimiento por edad de determinados grupos de gente?",opts:["La tabla de mortalidad","La tabla de morbilidad","La tabla de tarifas de prima","La tabla de dividendos"],ans:0},
+  {q:"Todos los siguientes son criterios para suscribir seguros de vida individual, EXCEPTO:",opts:["Sexo","Religión","Ocupación","Habilidad para pagar las primas"],ans:1},
+  {q:"El monto pagadero al tenedor de una póliza de seguro de vida entera cuando se rescata antes de la fecha de vencimiento es el:",opts:["Valor de la prima","Valor en efectivo","Valor del pago cumplido","Valor del préstamo"],ans:1},
+  {q:"¿Qué respalda las garantías en un contrato de anualidad fija?",opts:["La Corporación Federal de Seguros de Depósitos (FDIC)","Toda la fe y el crédito del gobierno de los Estados Unidos","Los activos generales de la compañía de seguros","Los activos que la compañía de seguros tiene en una cuenta separada"],ans:2},
+  {q:"Un agente de seguros de vida licenciado en Massachusetts está autorizado para:",opts:["Aprobar el pago de una reclamación","Reinstalar un contrato de seguro de la fecha de vencimiento","Solicitar, recibir y enviar solicitudes de seguro a la aseguradora","Reemplazar una póliza sin notificar a la aseguradora"],ans:2},
+  {q:"¿Qué tipo de póliza de seguro de vida está diseñada para pagar el saldo de un préstamo hipotecario a treinta años en caso del fallecimiento del asegurado?",opts:["Seguro de vida entera a 30 pagos","De término decreciente a 30 años","De término nivelado a 30 años","Dotal a 30 años"],ans:1},
+  {q:"La cláusula de un contrato de seguro de vida que prohíbe a la aseguradora cuestionar la validez del contrato después de cierto período es la:",opts:["Cláusula renovable garantizada","Cláusula de contrato completo","Cláusula incontestable","Cláusula no cancelable"],ans:2},
+  {q:"Al determinar las necesidades de seguro de vida de suma única, todos los siguientes objetivos financieros deben considerarse EXCEPTO:",opts:["Fondos para educación","Fondos de jubilación","Fondos de emergencia","Fondos para discapacidad"],ans:1},
+  {q:"Si el titular del contrato rescata completamente un contrato de anualidad, cualquier cargo de rescate aplicable:",opts:["Reducirá la liquidación del contrato final","Se pagará en adición al valor de acumulación","Determinará las opciones de pago disponibles","Se retendrá para pagar futuros costos administrativos"],ans:0},
+  {q:"Bajo la regulación federal de fraude y falso testimonio, el comercio interestatal incluye a:",opts:["México","Canadá","Bahamas","Puerto Rico"],ans:3},
+  {q:"¿Qué se usa comúnmente para estructurar el pago de liquidaciones de un seguro de responsabilidad, premios de lotería y otras sumas grandes?",opts:["Un contrato dotal modificado","Una cuenta de jubilación individual","Una anualidad con amparo tributario bajo sección 403(b)","Una anualidad inmediata"],ans:3},
+  {q:"La autoridad no escrita que tiene un agente para hacer trámites incidentales para cumplir con el contrato de la compañía de seguros es:",opts:["Autoridad implícita","Autoridad decretada","Autoridad expresa","Inexistente"],ans:0},
+  {q:"Un contrato de acuerdo de seguro de vida es un acuerdo entre un(a):",opts:["Titular de una póliza de seguro y un proveedor de un acuerdo de seguro de vida","Caja de ahorros y un proveedor de seguro de vida","Compañía de seguros de vida y un agente de acuerdo de seguros de vida","Titular de una póliza de seguro de vida y una compañía de seguro de vida"],ans:3},
+  {q:"¿Cómo afecta el pago de un beneficio acelerado a una póliza de seguro de vida?",opts:["Aumenta el valor en efectivo","Aumenta la prima de la póliza","Reduce el período de gracia","Reduce el beneficio por muerte"],ans:3},
+  {q:"Los problemas que pueden surgir si la designación de beneficiarios no es clara en una póliza de seguro de vida incluye todo lo siguiente, EXCEPTO:",opts:["El pago del monto pagadero podría demorarse","Podrían surgir disputas entre los posibles beneficiarios","El monto pagadero podría pagarse a otra persona que no sea la persona deseada","El monto pagadero podría ser confiscado por la compañía de seguros"],ans:3},
+  {q:"¿Qué producto de seguros ofrece una garantía de tasa mínima y una ganancia potencialmente mayor con base en el mercado de valores?",opts:["De vida variable","De vida crédito","De vida común mejorado","De vida indexado con el mercado"],ans:3},
+  {q:"Las disposiciones de valor en efectivo normalmente se encuentran en todas las pólizas de seguro de vida siguientes, EXCEPTO:",opts:["Seguro de vida universal","Seguro de vida ajustable","Seguro de vida a término decreciente","Seguro de vida entera"],ans:3},
+  {q:"¿Cuál es el estado de los impuestos respecto al interés acreditado a los valores en efectivo de las anualidades no aprobadas de propiedad personal?",opts:["Impuestos deducibles","Impuestos diferidos","Exento de impuestos","Impuestos sobre las ganancias de capital"],ans:3},
+  {q:"La decisión de una compañía de seguros de no hacer cumplir una disposición del contrato se llama:",opts:["Una renuncia","Una cesión","Un encubrimiento","Una declaración"],ans:0},
+  {q:"La contribución anual a la cuenta de un empleado que participa en un plan de jubilación aprobado:",opts:["Puede ser cualquier monto según lo determine el empleador para cada año","Debe ser el mismo monto para cada empleado de tiempo completo","No puede exceder los límites máximos determinados por el Servicio de Rentas Internas","Generalmente refleja el rendimiento individual del empleado cada año"],ans:2},
+  {q:"Todas las siguientes son ventajas de un seguro de vida entera EXCEPTO:",opts:["Se podría obtener un préstamo respaldado por la póliza","Proporciona protección a largo plazo","El costo inicial de la cobertura es menor que el de un monto equivalente de un seguro a término","Tiene un valor en efectivo si la póliza fue cancelada después de un período de tiempo suficiente"],ans:2},
+  {q:"¿Qué ventaja obtiene una empresa que proporciona un plan de jubilación aprobado, en vez de un plan no aprobado?",opts:["Puede ser diseñado para beneficiar solo a varios empleados clave","Las contribuciones del empleador al plan pueden deducirse de los impuestos","Los fondos del plan están disponibles para las necesidades generales de la empresa","Es útil para recompensar a ciertos empleados por haber hecho un buen trabajo"],ans:1},
+  {q:"Bajo las reglas de un contrato dotal modificado (MEC), si se produce un cambio esencial en el contrato:",opts:["Se generan ingresos gravables durante ese año","Se cobra una multa fiscal al dueño de la póliza","Se aplica nuevamente la prueba de los siete pagos, ajustada al valor en efectivo","Los préstamos pendientes sobre la póliza se deben pagar en su totalidad"],ans:2},
+  {q:"¿Qué grupo conforma la Agencia de Información Médica (Medical Information Bureau)?",opts:["Los consumidores","Los agentes de seguros","Las compañías de seguro","Los médicos"],ans:2},
+  {q:"Las anualidades vitalicias individuales se caracterizan por tener SOLO:",opts:["Un beneficiario (annuitant)","Una prima","Un beneficiario (beneficiary)","Un beneficio de suma global"],ans:1},
+  {q:"Un beneficiario revocable en una póliza de seguro de vida:",opts:["Tiene el derecho de nombrar a un beneficiario contingente","No tiene derechos conferidos en la póliza","Debe otorgar permiso para que el asegurado rescate la póliza","Puede demandar el valor de rescate en efectivo de la póliza en cualquier momento"],ans:1},
+  {q:"Para que un beneficio por fallecimiento accidental de un seguro de vida pueda pagarse, normalmente se deben cumplir todas las condiciones siguientes, EXCEPTO:",opts:["El fallecimiento debe ser el resultado de una lesión corporal accidental","El fallecimiento debe ocurrir dentro de un número especificado de días después de la lesión","El fallecimiento debe ser el resultado de una lesión relacionada con el trabajo","La lesión debe ocurrir antes de alguna edad especificada"],ans:2},
+  {q:"Cuando un suscriptor solicita a un médico información sobre el tratamiento médico reciente de un solicitante, el médico:",opts:["Responderá solo si el tratamiento ocurrió en los últimos dos años","Requerirá una solicitud por escrito del suscriptor","Volverá a examinar al solicitante","Requerirá una autorización por escrito y firmada del solicitante"],ans:3},
+  {q:"Todo lo siguiente acerca de los seguros es cierto, EXCEPTO:",opts:["Una pérdida grande incierta es intercambiada por un gasto pequeño cierto","A medida que aumenta el número de unidades aseguradoras, el número de pérdidas se reduce","El asegurado transfiere el riesgo de pérdida al asegurador","El asegurado puede retener parte de la pérdida por medio de deducibles"],ans:1},
+  {q:"La mejor manera de describir una póliza de seguro de vida universal sería como una combinación de:",opts:["Un fondo mutuo y una póliza de seguro de vida entera","Una póliza de seguro de vida a término y una anualidad","Una póliza dotal y un fondo de depósito sensible a los intereses","Un fondo de depósitos de prima flexible y una póliza de seguro a término renovable mensualmente"],ans:3},
+  {q:"Un plan de seguro de vida colectivo debe asegurar a todos los empleados aprobados si:",opts:["El grupo se formó con el único propósito de obtener un seguro","El empleador paga la prima completa","Los empleados están cubiertos bajo un plan de jubilación","El empleador paga un seguro de salud colectivo"],ans:1},
+  {q:"Si tanto el beneficiario primario como el beneficiario eventual de una póliza de seguro de vida han fallecido, los beneficios se pagan:",opts:["A la compañía de seguros","Al estado de residencia","Al caudal hereditario del asegurado","Al caudal hereditario del beneficiario eventual"],ans:2},
+  {q:"La medición contable de las futuras obligaciones de la aseguradora con sus asegurados es:",opts:["Excedente","Reservas","Fondos de contingencia","Cuenta de capital"],ans:1}
+];
+
+let state = 'splash';
+let numQ = 20;
+let questions = [];
+let current = 0;
+let selected = null;
+let answered = false;
+let results = [];
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i>0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function startQuiz(fromWrong) {
+  let pool = fromWrong
+    ? results.map((r,i)=>(!r?questions[i]:null)).filter(Boolean)
+    : shuffle([...ALL_Q]).slice(0, numQ);
+  if (!pool.length) pool = shuffle([...ALL_Q]).slice(0, numQ);
+  questions = pool;
+  current = 0; selected = null; answered = false; results = [];
+  state = 'quiz';
+  document.getElementById('topScore').style.display = 'flex';
+  render();
+}
+
+function getScore() { return results.filter(Boolean).length; }
+
+function render() {
+  updateTopScore();
+  if (state === 'splash') renderSplash();
+  else if (state === 'quiz') renderQuiz();
+  else renderResult();
+}
+
+function updateTopScore() {
+  const el = document.getElementById('topScore');
+  if (state === 'quiz') {
+    el.style.display = 'block';
+    el.textContent = getScore() + ' corretas';
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+function renderSplash() {
+  document.getElementById('app').innerHTML = `
+    <div class="splash">
+      <div class="splash-icon">📋</div>
+      <h1>Simulado de Seguros</h1>
+      <p>Prepare seus agentes para o exame de licença de Massachusetts. Escolha quantas questões deseja praticar.</p>
+      <div class="splash-opts">
+        ${[10,20,40,94].map(n=>`
+          <div class="splash-card ${numQ===n?'active':''}" onclick="numQ=${n};document.querySelectorAll('.splash-card').forEach(c=>c.classList.remove('active'));this.classList.add('active')">
+            <div class="splash-card-num">${n}</div>
+            <div class="splash-card-label">${n===94?'questões (todas)':'questões'}</div>
+          </div>
+        `).join('')}
+      </div>
+      <button class="btn-main btn-primary" style="font-size:16px;padding:14px 40px" onclick="startQuiz(false)">Começar simulado →</button>
+      <p style="margin-top:16px;font-size:12px;color:#aaa">94 questões no total · Gabarito com feedback imediato · Aprovação em 70%</p>
+    </div>
+  `;
+}
+
+function renderQuiz() {
+  const q = questions[current];
+  const progress = (current / questions.length) * 100;
+  const score = getScore();
+  document.getElementById('app').innerHTML = `
+    <div class="toolbar">
+      <select onchange="numQ=parseInt(this.value)" style="display:none"></select>
+      <button class="btn-main btn-outline" style="font-size:12px;padding:6px 14px" onclick="state='splash';render()">← Início</button>
+      <span style="font-size:13px;color:#888;margin-left:4px">Questão ${current+1} de ${questions.length}</span>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-info">
+        <span>${Math.round(progress)}% concluído</span>
+        <span>${score} corretas / ${current - score} erradas</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${progress}%"></div></div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="stat-num">${current+1}/${questions.length}</div><div class="stat-label">Questão</div></div>
+      <div class="stat"><div class="stat-num green">${score}</div><div class="stat-label">Corretas</div></div>
+      <div class="stat"><div class="stat-num red">${current-score}</div><div class="stat-label">Erradas</div></div>
+      <div class="stat"><div class="stat-num">${Math.round((current/(questions.length||1))*100)}%</div><div class="stat-label">Progresso</div></div>
+    </div>
+    <div class="q-card">
+      <div class="q-label">Questão ${current+1}</div>
+      <div class="q-text">${q.q}</div>
+      <div class="options">
+        ${q.opts.map((o,i)=>{
+          let cls='opt';
+          if(answered){if(i===q.ans)cls+=' correct';else if(i===selected)cls+=' wrong';}
+          else if(i===selected)cls+=' selected';
+          return `<div class="${cls}" onclick="selectOpt(${i})">
+            <div class="opt-letter">${LETTERS[i]}</div>
+            <span>${o}</span>
+          </div>`;
+        }).join('')}
+      </div>
+      ${answered?`<div class="feedback ${selected===q.ans?'ok':'err'}">
+        ${selected===q.ans?'✓ Correto!':'✗ Incorreto. Resposta correta: '+LETTERS[q.ans]+') '+q.opts[q.ans]}
+      </div>`:''}
+    </div>
+    <div class="nav">
+      ${current>0?`<button class="btn-main btn-outline" onclick="goBack()">← Anterior</button>`:'<div></div>'}
+      ${answered
+        ?`<button class="btn-main btn-primary" onclick="nextQ()">${current<questions.length-1?'Próxima →':'Ver resultado'}</button>`
+        :`<button class="btn-main btn-primary" onclick="checkAns()" ${selected===null?'disabled':''}>Confirmar</button>`}
+    </div>
+  `;
+}
+
+function renderResult() {
+  const score = getScore();
+  const pct = Math.round((score/questions.length)*100);
+  const approved = pct >= 70;
+  document.getElementById('app').innerHTML = `
+    <div class="result-wrap">
+      <div class="result-hero" style="background:${approved?'#085041':'#791F1F'}">
+        <div class="result-pct">${pct}%</div>
+        <div class="result-msg">${approved?'✓ Aprovado!':'✗ Continue estudando'}</div>
+        <div class="result-sub">${score} de ${questions.length} questões corretas · Mínimo para aprovação: 70%</div>
+        <div class="result-actions">
+          <button class="btn-main" style="background:white;color:#085041" onclick="state='splash';render()">Novo simulado</button>
+          ${score<questions.length?`<button class="btn-main" style="background:rgba(255,255,255,0.2);color:white;border:1px solid rgba(255,255,255,0.4)" onclick="startQuiz(true)">Refazer ${questions.length-score} erradas</button>`:''}
+        </div>
+      </div>
+      <p style="font-size:14px;color:var(--muted);margin-bottom:14px;font-weight:500">Revisão completa:</p>
+      ${questions.map((q,i)=>`
+        <div class="review-item">
+          <span class="tag ${results[i]?'ok':'err'}">${results[i]?'✓ Correto':'✗ Incorreto'}</span>
+          <div class="review-q">${i+1}. ${q.q}</div>
+          <div class="review-ans">Resposta: <strong>${LETTERS[q.ans]}) ${q.opts[q.ans]}</strong></div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+function selectOpt(i) { if(answered)return; selected=i; render(); }
+function checkAns() { if(selected===null)return; answered=true; results[current]=(selected===questions[current].ans); render(); }
+function nextQ() {
+  if(current<questions.length-1){current++;selected=null;answered=false;render();}
+  else{state='result';render();}
+}
+function goBack() {
+  if(current>0){current--;answered=results[current]!==undefined;selected=answered?(results[current]?questions[current].ans:-1):null;render();}
+}
+
+render();
+</script>
+</body>
+</html>
